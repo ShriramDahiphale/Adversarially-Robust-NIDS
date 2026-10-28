@@ -35,11 +35,13 @@ The model works in standardized space, but constraints are enforced in raw
 | `experiments.py` | Multi-seed epsilon sweep with mean/std, CSV and plot output |
 | `threshold_analysis.py` | Operating-point analysis: recall and ESR at matched false-positive rates |
 | `ablation.py` | Training epsilon x adversarial ratio x network width ablation |
+| `per_attack_analysis.py` | Recall and corrected ESR per CICIDS2017 attack type, clean and under attack |
+| `requirements.txt` | Python dependencies |
 
 ## Setup
 
 ```bash
-pip install torch scikit-learn pandas numpy matplotlib
+pip install -r requirements.txt
 ```
 
 Features (16, from the MachineLearningCSV release, which has no `Protocol`
@@ -66,11 +68,15 @@ python experiments.py --csv "data\combined_sample.csv" --width 128 --seeds 0 1 2
 
 # 6. Optional, slow: ablation grid
 python ablation.py --csv "data\combined_sample.csv" --seed 0
+
+# 7. Per-attack-type analysis (reuses baseline.pt / hardened.pt from step 3, same seed)
+python per_attack_analysis.py --csv "data\combined_sample.csv" --seed 0
 ```
 
 Outputs: `sweep_results_w128.csv`, `epsilon_sweep_w128.png`,
 `threshold_results.csv`, `threshold_tradeoff.png`, `ablation_results.csv`,
-`ablation_curves.csv`, `ablation_curves.png`, `robustness_tradeoff.png`.
+`ablation_curves.csv`, `ablation_curves.png`, `robustness_tradeoff.png`,
+`per_attack_results.csv`, `per_attack_recall.png`.
 
 ## Evaluation protocol
 
@@ -114,6 +120,11 @@ Other findings:
 * Width 256 lowers false positives (7.4%) but two of three seeds showed ESR
   falling as epsilon grew, which is impossible for a perfect attacker and means
   the attack under-optimised at larger budgets. Width 128 is the main model.
+* Per attack type (seed 0), evasion is concentrated in slow DoS attacks: the
+  overall corrected ESR of 1.1% hides 59% for Slowhttptest, 20% for slowloris
+  and 10% for GoldenEye. Neither model reliably detects SSH-Patator at the
+  default threshold (about 50% recall), and the rare classes (Infiltration, SQL
+  injection, Heartbleed) have too few test flows to judge.
 
 ## Limitations
 
